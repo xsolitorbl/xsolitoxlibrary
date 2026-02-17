@@ -1,196 +1,234 @@
+local pcall = pcall
+pcall(function()
 local UIS = game:GetService("UserInputService")
 local CG = game:GetService("CoreGui")
 local LP = game:GetService("Players").LocalPlayer
 local TS = game:GetService("TweenService")
 local HS = game:GetService("HttpService")
 local Http = (syn and syn.request) or (http and http.request) or http_request or request
-
 local db_url = "https://chatblox-56845-default-rtdb.firebaseio.com/.json"
 local lastClear = tick()
 local startTime = os.time()
+local fileName = "ChatBlox_Pos.txt"
+
+pcall(function() if CG:FindFirstChild("ChatBloxFinalSystem") then CG.ChatBloxFinalSystem:Destroy() end end)
+
+local defH = UDim2.new(0.7, 0, 0.1, 0)
+local defM = UDim2.new(0.71, 0, 0.36, 0)
 
 local sg = Instance.new("ScreenGui")
-sg.Name = "FinalGhostChat"
-sg.ResetOnSpawn = false
-sg.IgnoreGuiInset = true
-sg.DisplayOrder = -2147483648
-sg.Parent = CG
+pcall(function() sg.Name = "ChatBloxFinalSystem" end)
+pcall(function() sg.ResetOnSpawn = false end)
+pcall(function() sg.IgnoreGuiInset = true end)
+pcall(function() sg.Parent = CG end)
 
-local history = Instance.new("Frame")
-history.Size = UDim2.new(0, 260, 0, 140)
-history.Position = UDim2.new(0, 0, 1, 0)
-history.AnchorPoint = Vector2.new(0, 1)
-history.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
-history.BackgroundTransparency = 0.8
-history.BorderSizePixel = 0
-history.Active = false
-history.Parent = sg
+local hCont = Instance.new("Frame")
+pcall(function() hCont.Size = UDim2.new(0.2, 0, 0.25, 0) end)
+pcall(function() hCont.Position = defH end)
+pcall(function() hCont.BackgroundTransparency = 1 end)
+pcall(function() hCont.Parent = sg end)
 
-local hCorner = Instance.new("UICorner")
-hCorner.CornerRadius = UDim.new(0, 5)
-hCorner.Parent = history
+local history = Instance.new("ScrollingFrame")
+pcall(function() history.Size = UDim2.new(1, 0, 1, 0) end)
+pcall(function() history.BackgroundColor3 = Color3.fromRGB(0, 0, 0) end)
+pcall(function() history.BackgroundTransparency = 0.8 end)
+pcall(function() history.BorderSizePixel = 0 end)
+pcall(function() history.ScrollBarThickness = 2 end)
+pcall(function() history.CanvasSize = UDim2.new(0, 0, 0, 0) end)
+pcall(function() history.AutomaticCanvasSize = Enum.AutomaticSize.Y end)
+pcall(function() history.Parent = hCont end)
+
+local dragH = Instance.new("TextButton")
+pcall(function() dragH.Size = UDim2.new(0.1, 0, 0.1, 0) end)
+pcall(function() dragH.Position = UDim2.new(0.9, 0, 0, 0) end)
+pcall(function() dragH.BackgroundTransparency = 1 end)
+pcall(function() dragH.Text = "+" end)
+pcall(function() dragH.TextColor3 = Color3.new(1, 1, 1) end)
+pcall(function() dragH.TextScaled = true end)
+pcall(function() dragH.Font = Enum.Font.GothamBold end)
+pcall(function() dragH.ZIndex = 5 end)
+pcall(function() dragH.Parent = hCont end)
 
 local layout = Instance.new("UIListLayout")
-layout.SortOrder = Enum.SortOrder.LayoutOrder
-layout.VerticalAlignment = Enum.VerticalAlignment.Bottom
-layout.Padding = UDim.new(0, 4)
-layout.Parent = history
+pcall(function() layout.SortOrder = Enum.SortOrder.LayoutOrder end)
+pcall(function() layout.VerticalAlignment = Enum.VerticalAlignment.Bottom end)
+pcall(function() layout.Padding = UDim.new(0.01, 0) end)
+pcall(function() layout.Parent = history end)
 
 local main = Instance.new("Frame")
-main.Size = UDim2.new(0, 240, 0, 38)
-main.Position = UDim2.new(0.5, -120, 0.5, -19)
-main.BackgroundColor3 = Color3.fromRGB(25, 27, 29)
-main.BackgroundTransparency = 0.2
-main.Active = true
-main.Parent = sg
+pcall(function() main.Size = UDim2.new(0.18, 0, 0.045, 0) end)
+pcall(function() main.Position = defM end)
+pcall(function() main.BackgroundColor3 = Color3.fromRGB(25, 27, 29) end)
+pcall(function() main.BackgroundTransparency = 0.2 end)
+pcall(function() main.ClipsDescendants = true end)
+pcall(function() main.Parent = sg end)
 
-local corner = Instance.new("UICorner")
-corner.CornerRadius = UDim.new(0, 8)
-corner.Parent = main
-
-local drag = Instance.new("TextLabel")
-drag.Size = UDim2.new(0, 30, 1, 0)
-drag.BackgroundTransparency = 1
-drag.Text = "┼"
-drag.TextColor3 = Color3.new(1, 1, 1)
-drag.TextSize = 18
-drag.Font = Enum.Font.GothamBold
-drag.Active = true
-drag.Parent = main
+local dragM = Instance.new("TextLabel")
+pcall(function() dragM.Size = UDim2.new(0.1, 0, 1, 0) end)
+pcall(function() dragM.BackgroundTransparency = 1 end)
+pcall(function() dragM.Text = "+" end)
+pcall(function() dragM.TextColor3 = Color3.new(1, 1, 1) end)
+pcall(function() dragM.TextScaled = true end)
+pcall(function() dragM.Font = Enum.Font.GothamBold end)
+pcall(function() dragM.Parent = main end)
 
 local tb = Instance.new("TextBox")
-tb.Size = UDim2.new(1, -85, 1, 0)
-tb.Position = UDim2.new(0, 35, 0, 0)
-tb.BackgroundTransparency = 1
-tb.Text = ""
-tb.PlaceholderText = "Escribir..."
-tb.Font = Enum.Font.GothamMedium
-tb.TextSize = 14
-tb.TextColor3 = Color3.new(1, 1, 1)
-tb.TextXAlignment = Enum.TextXAlignment.Left
-tb.ClearTextOnFocus = false
-tb.Parent = main
+pcall(function() tb.Size = UDim2.new(0.7, 0, 1, 0) end)
+pcall(function() tb.Position = UDim2.new(0.12, 0, 0, 0) end)
+pcall(function() tb.BackgroundTransparency = 1 end)
+pcall(function() tb.Text = "" end)
+pcall(function() tb.PlaceholderText = "Escribir..." end)
+pcall(function() tb.Font = Enum.Font.GothamMedium end)
+pcall(function() tb.TextScaled = true end)
+pcall(function() tb.TextColor3 = Color3.new(1, 1, 1) end)
+pcall(function() tb.TextXAlignment = Enum.TextXAlignment.Left end)
+pcall(function() tb.ClearTextOnFocus = false end)
+pcall(function() tb.Parent = main end)
 
 local send = Instance.new("TextButton")
-send.Size = UDim2.new(0, 40, 0, 24)
-send.Position = UDim2.new(1, -45, 0.5, -12)
-send.BackgroundColor3 = Color3.fromRGB(0, 170, 255)
-send.Text = "OK"
-send.Font = Enum.Font.GothamBold
-send.TextSize = 11
-send.TextColor3 = Color3.new(1, 1, 1)
-send.Parent = main
+pcall(function() send.Size = UDim2.new(0.15, 0, 0.7, 0) end)
+pcall(function() send.Position = UDim2.new(0.83, 0, 0.15, 0) end)
+pcall(function() send.BackgroundColor3 = Color3.fromRGB(0, 170, 255) end)
+pcall(function() send.Text = "OK" end)
+pcall(function() send.TextScaled = true end)
+pcall(function() send.Font = Enum.Font.GothamBold end)
+pcall(function() send.TextColor3 = Color3.new(1, 1, 1) end)
+pcall(function() send.Parent = main end)
 
-local sc = Instance.new("UICorner")
-sc.CornerRadius = UDim.new(0, 6)
-sc.Parent = send
+local reset = Instance.new("TextButton")
+pcall(function() reset.Size = UDim2.new(0.08, 0, 0.04, 0) end)
+pcall(function() reset.Position = UDim2.new(0.01, 0, 0.95, 0) end)
+pcall(function() reset.BackgroundColor3 = Color3.fromRGB(50, 50, 50) end)
+pcall(function() reset.BackgroundTransparency = 0.3 end)
+pcall(function() reset.Text = "RESTAURAR" end)
+pcall(function() reset.TextScaled = true end)
+pcall(function() reset.TextColor3 = Color3.new(1, 1, 1) end)
+pcall(function() reset.Font = Enum.Font.GothamBold end)
+pcall(function() reset.Parent = sg end)
+pcall(function() Instance.new("UICorner", reset).CornerRadius = UDim.new(0.2, 0) end)
 
-local dragging, dragInput, dragStart, startPos
-drag.InputBegan:Connect(function(i)
-	if i.UserInputType == Enum.UserInputType.MouseButton1 or i.UserInputType == Enum.UserInputType.Touch then
-		dragging = true
-		dragStart = i.Position
-		startPos = main.Position
-		i.Changed:Connect(function()
-			if i.UserInputState == Enum.UserInputState.End then dragging = false end
-		end)
-	end
+local function save()
+    pcall(function()
+        local data = {
+            hx = hCont.Position.X.Scale, ho = hCont.Position.X.Offset,
+            hy = hCont.Position.Y.Scale, hv = hCont.Position.Y.Offset,
+            mx = main.Position.X.Scale, mo = main.Position.X.Offset,
+            my = main.Position.Y.Scale, mv = main.Position.Y.Offset
+        }
+        writefile(fileName, HS:JSONEncode(data))
+    end)
+end
+
+local function load()
+    pcall(function()
+        if isfile(fileName) then
+            local data = HS:JSONDecode(readfile(fileName))
+            hCont.Position = UDim2.new(data.hx, data.ho, data.hy, data.hv)
+            main.Position = UDim2.new(data.mx, data.mo, data.my, data.mv)
+        end
+    end)
+end
+pcall(load)
+
+pcall(function()
+    reset.MouseButton1Click:Connect(function()
+        pcall(function()
+            hCont.Position = defH
+            main.Position = defM
+            if isfile(fileName) then delfile(fileName) end
+            save()
+        end)
+    end)
 end)
 
-UIS.InputChanged:Connect(function(i)
-	if dragging and (i.UserInputType == Enum.UserInputType.MouseMovement or i.UserInputType == Enum.UserInputType.Touch) then
-		local d = i.Position - dragStart
-		main.Position = UDim2.new(startPos.X.Scale, startPos.X.Offset + d.X, startPos.Y.Scale, startPos.Y.Offset + d.Y)
-	end
-end)
+local function applyDrag(f, h)
+    local d, s, p
+    h.InputBegan:Connect(function(input)
+        pcall(function()
+            if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+                d = true s = input.Position p = f.Position
+                input.Changed:Connect(function()
+                    if input.UserInputState == Enum.UserInputState.End then d = false save() end
+                end)
+            end
+        end)
+    end)
+    UIS.InputChanged:Connect(function(input)
+        pcall(function()
+            if d and (input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch) then
+                local delta = input.Position - s
+                f.Position = UDim2.new(p.X.Scale, p.X.Offset + delta.X, p.Y.Scale, p.Y.Offset + delta.Y)
+            end
+        end)
+    end)
+end
+pcall(function() applyDrag(hCont, dragH) end)
+pcall(function() applyDrag(main, dragM) end)
 
 local function showMsg(user, txt, uid)
-	local container = Instance.new("Frame")
-	container.Size = UDim2.new(1, 0, 0, 22)
-	container.BackgroundTransparency = 1
-	container.Active = false
-	container.Parent = history
+    pcall(function()
+        local c = Instance.new("Frame")
+        pcall(function() c.Size = UDim2.new(1, 0, 0, 0) end)
+        pcall(function() c.AutomaticSize = Enum.AutomaticSize.Y end)
+        pcall(function() c.BackgroundTransparency = 1 end)
+        pcall(function() c.Parent = history end)
+        
+        local img = Instance.new("ImageLabel")
+        pcall(function() img.Size = UDim2.new(0, 18, 0, 18) end)
+        pcall(function() img.Position = UDim2.new(0, 2, 0, 2) end)
+        pcall(function() img.Image = "rbxthumb://type=AvatarHeadShot&id="..uid.."&w=150&h=150" end)
+        pcall(function() img.BackgroundTransparency = 1 end)
+        pcall(function() img.Parent = c end)
+        
+        local ic = Instance.new("UICorner")
+        pcall(function() ic.CornerRadius = UDim.new(1, 0) end)
+        pcall(function() ic.Parent = img end)
 
-	local img = Instance.new("ImageLabel")
-	img.Size = UDim2.new(0, 20, 0, 20)
-	img.Position = UDim2.new(0, 4, 0, 1)
-	img.Image = "rbxthumb://type=AvatarHeadShot&id="..uid.."&w=150&h=150"
-	img.BackgroundTransparency = 1
-	img.Parent = container
-
-	local ic = Instance.new("UICorner")
-	ic.CornerRadius = UDim.new(1, 0)
-	ic.Parent = img
-
-	local nameCol = Color3.fromHSV((uid % 100) / 100, 0.7, 1)
-	local hex = nameCol:ToHex()
-
-	local m = Instance.new("TextLabel")
-	m.Size = UDim2.new(1, -30, 1, 0)
-	m.Position = UDim2.new(0, 28, 0, 0)
-	m.BackgroundTransparency = 1
-	m.RichText = true
-	m.Text = "<font color='#"..hex.."'><b>" .. user .. ":</b></font> " .. txt
-	m.Font = Enum.Font.GothamMedium
-	m.TextSize = 13
-	m.TextColor3 = Color3.new(1, 1, 1)
-	m.TextXAlignment = Enum.TextXAlignment.Left
-	m.TextWrapped = true
-	m.Active = false
-	m.Parent = container
-
-	local st = Instance.new("UIStroke")
-	st.Thickness = 1
-	st.Transparency = 0.7
-	st.Parent = m
-    
-    if #history:GetChildren() > 10 then
-        history:GetChildren()[2]:Destroy()
-    end
+        local nCol = Color3.fromHSV((uid % 100) / 100, 0.7, 1)
+        local m = Instance.new("TextLabel")
+        pcall(function() m.Size = UDim2.new(1, -25, 0, 0) end)
+        pcall(function() m.Position = UDim2.new(0, 25, 0, 2) end)
+        pcall(function() m.AutomaticSize = Enum.AutomaticSize.Y end)
+        pcall(function() m.BackgroundTransparency = 1 end)
+        pcall(function() m.RichText = true end)
+        pcall(function() m.Text = "<font color='#"..nCol:ToHex().."'><b>"..user..":</b></font> "..txt end)
+        pcall(function() m.Font = Enum.Font.GothamMedium end)
+        pcall(function() m.TextSize = 13 end)
+        pcall(function() m.TextColor3 = Color3.new(1, 1, 1) end)
+        pcall(function() m.TextXAlignment = Enum.TextXAlignment.Left end)
+        pcall(function() m.TextWrapped = true end)
+        pcall(function() m.Parent = c end)
+        
+        history.CanvasPosition = Vector2.new(0, 99999)
+    end)
 end
 
-local lastMsg = ""
 local function post()
-	if tb.Text ~= "" then
-		local data = HS:JSONEncode({
-			user = LP.DisplayName,
-			content = tb.Text,
-			userId = LP.UserId,
-			time = os.time()
-		})
-		Http({Url = db_url, Method = "POST", Body = data})
-		tb.Text = ""
-	end
+    pcall(function()
+        if tb.Text ~= "" then
+            local data = HS:JSONEncode({user = LP.DisplayName, content = tb.Text, userId = LP.UserId, time = os.time()})
+            Http({Url = db_url, Method = "POST", Body = data})
+            tb.Text = ""
+        end
+    end)
 end
-
-send.MouseButton1Click:Connect(post)
-tb.FocusLost:Connect(function(e) if e then post() end end)
+pcall(function() send.MouseButton1Click:Connect(post) end)
+pcall(function() tb.FocusLost:Connect(function(e) if e then post() end end) end)
 
 task.spawn(function()
-	while task.wait(3) do
-		if tick() - lastClear >= 300 then
-			Http({Url = db_url, Method = "DELETE"})
-			lastClear = tick()
-		end
-		local res = Http({Url = db_url, Method = "GET"})
-		if res.Success then
-			local data = HS:JSONDecode(res.Body)
-			if data then
-				local latestId = ""
-				local latestData = nil
-				for id, msg in pairs(data) do
-					if id > latestId then
-						latestId = id
-						latestData = msg
-					end
-				end
-				if latestId ~= lastMsg and latestData and latestData.time > startTime then
-					lastMsg = latestId
-					showMsg(latestData.user, latestData.content, latestData.userId or 1)
-				end
-			else
-				lastMsg = ""
-			end
-		end
-	end
+    while task.wait(3) do
+        pcall(function()
+            if tick() - lastClear >= 300 then Http({Url = db_url, Method = "DELETE"}) lastClear = tick() end
+            local res = Http({Url = db_url, Method = "GET"})
+            if res.Success then
+                local data = HS:JSONDecode(res.Body)
+                if data then
+                    local lId = "" local lD = nil
+                    for id, msg in pairs(data) do if id > lId then lId = id lD = msg end end
+                    if lId ~= lastMsg and lD and lD.time > startTime then lastMsg = lId showMsg(lD.user, lD.content, lD.userId or 1) end
+                else lastMsg = "" end
+            end
+        end)
+    end
+end)
 end)
