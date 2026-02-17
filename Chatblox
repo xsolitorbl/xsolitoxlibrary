@@ -1,0 +1,196 @@
+local UIS = game:GetService("UserInputService")
+local CG = game:GetService("CoreGui")
+local LP = game:GetService("Players").LocalPlayer
+local TS = game:GetService("TweenService")
+local HS = game:GetService("HttpService")
+local Http = (syn and syn.request) or (http and http.request) or http_request or request
+
+local db_url = "https://chatblox-56845-default-rtdb.firebaseio.com/.json"
+local lastClear = tick()
+local startTime = os.time()
+
+local sg = Instance.new("ScreenGui")
+sg.Name = "FinalGhostChat"
+sg.ResetOnSpawn = false
+sg.IgnoreGuiInset = true
+sg.DisplayOrder = -2147483648
+sg.Parent = CG
+
+local history = Instance.new("Frame")
+history.Size = UDim2.new(0, 260, 0, 140)
+history.Position = UDim2.new(0, 0, 1, 0)
+history.AnchorPoint = Vector2.new(0, 1)
+history.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
+history.BackgroundTransparency = 0.8
+history.BorderSizePixel = 0
+history.Active = false
+history.Parent = sg
+
+local hCorner = Instance.new("UICorner")
+hCorner.CornerRadius = UDim.new(0, 5)
+hCorner.Parent = history
+
+local layout = Instance.new("UIListLayout")
+layout.SortOrder = Enum.SortOrder.LayoutOrder
+layout.VerticalAlignment = Enum.VerticalAlignment.Bottom
+layout.Padding = UDim.new(0, 4)
+layout.Parent = history
+
+local main = Instance.new("Frame")
+main.Size = UDim2.new(0, 240, 0, 38)
+main.Position = UDim2.new(0.5, -120, 0.5, -19)
+main.BackgroundColor3 = Color3.fromRGB(25, 27, 29)
+main.BackgroundTransparency = 0.2
+main.Active = true
+main.Parent = sg
+
+local corner = Instance.new("UICorner")
+corner.CornerRadius = UDim.new(0, 8)
+corner.Parent = main
+
+local drag = Instance.new("TextLabel")
+drag.Size = UDim2.new(0, 30, 1, 0)
+drag.BackgroundTransparency = 1
+drag.Text = "┼"
+drag.TextColor3 = Color3.new(1, 1, 1)
+drag.TextSize = 18
+drag.Font = Enum.Font.GothamBold
+drag.Active = true
+drag.Parent = main
+
+local tb = Instance.new("TextBox")
+tb.Size = UDim2.new(1, -85, 1, 0)
+tb.Position = UDim2.new(0, 35, 0, 0)
+tb.BackgroundTransparency = 1
+tb.Text = ""
+tb.PlaceholderText = "Escribir..."
+tb.Font = Enum.Font.GothamMedium
+tb.TextSize = 14
+tb.TextColor3 = Color3.new(1, 1, 1)
+tb.TextXAlignment = Enum.TextXAlignment.Left
+tb.ClearTextOnFocus = false
+tb.Parent = main
+
+local send = Instance.new("TextButton")
+send.Size = UDim2.new(0, 40, 0, 24)
+send.Position = UDim2.new(1, -45, 0.5, -12)
+send.BackgroundColor3 = Color3.fromRGB(0, 170, 255)
+send.Text = "OK"
+send.Font = Enum.Font.GothamBold
+send.TextSize = 11
+send.TextColor3 = Color3.new(1, 1, 1)
+send.Parent = main
+
+local sc = Instance.new("UICorner")
+sc.CornerRadius = UDim.new(0, 6)
+sc.Parent = send
+
+local dragging, dragInput, dragStart, startPos
+drag.InputBegan:Connect(function(i)
+	if i.UserInputType == Enum.UserInputType.MouseButton1 or i.UserInputType == Enum.UserInputType.Touch then
+		dragging = true
+		dragStart = i.Position
+		startPos = main.Position
+		i.Changed:Connect(function()
+			if i.UserInputState == Enum.UserInputState.End then dragging = false end
+		end)
+	end
+end)
+
+UIS.InputChanged:Connect(function(i)
+	if dragging and (i.UserInputType == Enum.UserInputType.MouseMovement or i.UserInputType == Enum.UserInputType.Touch) then
+		local d = i.Position - dragStart
+		main.Position = UDim2.new(startPos.X.Scale, startPos.X.Offset + d.X, startPos.Y.Scale, startPos.Y.Offset + d.Y)
+	end
+end)
+
+local function showMsg(user, txt, uid)
+	local container = Instance.new("Frame")
+	container.Size = UDim2.new(1, 0, 0, 22)
+	container.BackgroundTransparency = 1
+	container.Active = false
+	container.Parent = history
+
+	local img = Instance.new("ImageLabel")
+	img.Size = UDim2.new(0, 20, 0, 20)
+	img.Position = UDim2.new(0, 4, 0, 1)
+	img.Image = "rbxthumb://type=AvatarHeadShot&id="..uid.."&w=150&h=150"
+	img.BackgroundTransparency = 1
+	img.Parent = container
+
+	local ic = Instance.new("UICorner")
+	ic.CornerRadius = UDim.new(1, 0)
+	ic.Parent = img
+
+	local nameCol = Color3.fromHSV((uid % 100) / 100, 0.7, 1)
+	local hex = nameCol:ToHex()
+
+	local m = Instance.new("TextLabel")
+	m.Size = UDim2.new(1, -30, 1, 0)
+	m.Position = UDim2.new(0, 28, 0, 0)
+	m.BackgroundTransparency = 1
+	m.RichText = true
+	m.Text = "<font color='#"..hex.."'><b>" .. user .. ":</b></font> " .. txt
+	m.Font = Enum.Font.GothamMedium
+	m.TextSize = 13
+	m.TextColor3 = Color3.new(1, 1, 1)
+	m.TextXAlignment = Enum.TextXAlignment.Left
+	m.TextWrapped = true
+	m.Active = false
+	m.Parent = container
+
+	local st = Instance.new("UIStroke")
+	st.Thickness = 1
+	st.Transparency = 0.7
+	st.Parent = m
+    
+    if #history:GetChildren() > 10 then
+        history:GetChildren()[2]:Destroy()
+    end
+end
+
+local lastMsg = ""
+local function post()
+	if tb.Text ~= "" then
+		local data = HS:JSONEncode({
+			user = LP.DisplayName,
+			content = tb.Text,
+			userId = LP.UserId,
+			time = os.time()
+		})
+		Http({Url = db_url, Method = "POST", Body = data})
+		tb.Text = ""
+	end
+end
+
+send.MouseButton1Click:Connect(post)
+tb.FocusLost:Connect(function(e) if e then post() end end)
+
+task.spawn(function()
+	while task.wait(3) do
+		if tick() - lastClear >= 300 then
+			Http({Url = db_url, Method = "DELETE"})
+			lastClear = tick()
+		end
+		local res = Http({Url = db_url, Method = "GET"})
+		if res.Success then
+			local data = HS:JSONDecode(res.Body)
+			if data then
+				local latestId = ""
+				local latestData = nil
+				for id, msg in pairs(data) do
+					if id > latestId then
+						latestId = id
+						latestData = msg
+					end
+				end
+				if latestId ~= lastMsg and latestData and latestData.time > startTime then
+					lastMsg = latestId
+					showMsg(latestData.user, latestData.content, latestData.userId or 1)
+				end
+			else
+				lastMsg = ""
+			end
+		end
+	end
+end)
